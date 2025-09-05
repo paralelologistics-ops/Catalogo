@@ -773,234 +773,256 @@
 
     <script>
         // URL de tu Google Apps Script
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyX6tkmzeBKog_WP_WnmpIdASwe_ulny2nccAXn8ZboxHiSm_AJ8_zm7D9BZ0M-9icA/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzrrpaogFpByzUeCQrHFSXltsSocY2HTahEfdPX8XT9KJvZy0t_oVnUTWzO2XDpXNiP/exec';
+
+// DOM Elements
+const productsGrid = document.getElementById('products-grid');
+const productModal = document.getElementById('product-modal');
+const closeModal = document.getElementById('close-modal');
+const modalProductName = document.getElementById('modal-product-name');
+const modalProductPrice = document.getElementById('modal-product-price');
+const modalMainImage = document.getElementById('modal-main-image');
+const imageThumbnails = document.getElementById('image-thumbnails');
+const sizeOptions = document.getElementById('size-options');
+const searchInput = document.getElementById('search-input');
+const searchButton = document.getElementById('search-button');
+const categoryButtons = document.querySelectorAll('.category-btn');
+const whatsappProductBtn = document.getElementById('whatsapp-product-btn');
+
+// Current product for WhatsApp message
+let currentProduct = null;
+let allProducts = [];
+
+// Cargar productos desde Google Sheets
+async function loadProducts() {
+    try {
+        showLoader();
         
-        // DOM Elements
-        const productsGrid = document.getElementById('products-grid');
-        const productModal = document.getElementById('product-modal');
-        const closeModal = document.getElementById('close-modal');
-        const modalProductName = document.getElementById('modal-product-name');
-        const modalProductPrice = document.getElementById('modal-product-price');
-        const modalMainImage = document.getElementById('modal-main-image');
-        const imageThumbnails = document.getElementById('image-thumbnails');
-        const sizeOptions = document.getElementById('size-options');
-        const searchInput = document.getElementById('search-input');
-        const searchButton = document.getElementById('search-button');
-        const categoryButtons = document.querySelectorAll('.category-btn');
-        const whatsappProductBtn = document.getElementById('whatsapp-product-btn');
-
-        // Current product for WhatsApp message
-        let currentProduct = null;
-        let allProducts = [];
-
-        // Cargar productos desde Google Sheets
-        async function loadProducts() {
-            try {
-                showLoader();
-                
-                const response = await fetch(GOOGLE_SCRIPT_URL);
-                if (!response.ok) {
-                    throw new Error('Error al cargar los productos');
+        const response = await fetch(GOOGLE_SCRIPT_URL);
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+        
+        const productsData = await response.json();
+        
+        // Transformar los datos
+        allProducts = productsData.map(product => {
+            // Recoger todas las imágenes disponibles
+            const images = [];
+            for (let i = 1; i <= 8; i++) {
+                const imgUrl = product[`Imagen${i}`];
+                if (imgUrl && imgUrl.trim() !== '') {
+                    images.push(imgUrl);
                 }
-                
-                const productsData = await response.json();
-                
-                // Transformar los datos de la hoja al formato que necesita nuestra app
-                allProducts = productsData.map(product => {
-                    // Recoger todas las imágenes disponibles
-                    const images = [];
-                    for (let i = 1; i <= 8; i++) {
-                        const imgUrl = product[`Imagen${i}`];
-                        if (imgUrl && imgUrl.trim() !== '') {
-                            images.push(imgUrl);
-                        }
-                    }
-                    
-                    return {
-                        name: product.Referencia || 'Sin nombre',
-                        price: product['Precio Nuevo Paralelo y Multimarcas'] || 'Consultar',
-                        sizes: product.TALLA || 'Única',
-                        images: images,
-                        category: product.Categoria || 'Sin categoría'
-                    };
-                }).filter(product => product.images.length > 0); // Solo productos con imágenes
-                
-                displayProducts(allProducts);
-            } catch (error) {
-                console.error('Error cargando productos:', error);
-                productsGrid.innerHTML = '<p class="no-products">Error al cargar los productos. Por favor, recarga la página.</p>';
-            }
-        }
-
-        // Mostrar loader
-        function showLoader() {
-            productsGrid.innerHTML = `
-                <div class="loader">
-                    <div class="loader-circle"></div>
-                </div>
-            `;
-        }
-
-        // Display products in the grid
-        function displayProducts(productsToShow) {
-            productsGrid.innerHTML = '';
-            
-            if (productsToShow.length === 0) {
-                productsGrid.innerHTML = '<p class="no-products">No se encontraron productos.</p>';
-                return;
             }
             
-            productsToShow.forEach(product => {
-                const productCard = document.createElement('div');
-                productCard.className = 'product-card';
-                productCard.innerHTML = `
-                    <div class="product-image">
-                        <img src="${product.images[0]}" alt="${product.name}" loading="lazy">
-                    </div>
-                    <div class="product-info">
-                        <div class="product-name">${product.name}</div>
-                        <div class="product-price">${product.price ? '$' + product.price : 'Consultar'}</div>
-                    </div>
-                `;
+            // Procesar categorías (manejar múltiples categorías separadas por coma)
+            let categories = product.Categoria || 'Sin categoría';
+            if (typeof categories === 'string') {
+                // Dividir por comas y limpiar espacios
+                categories = categories.split(',').map(cat => cat.trim()).filter(cat => cat !== '');
+            }
+            
+            // Si no hay categorías, poner una por defecto
+            if (categories.length === 0) {
+                categories = ['Sin categoría'];
+            }
+            
+            return {
+                name: product.Referencia || 'Sin nombre',
+                price: product['Precio Nuevo Paralelo y Multimarcas'] || 'Consultar',
+                sizes: product.TALLA || 'Única',
+                images: images,
+                categories: categories
+            };
+        }).filter(product => product.images.length > 0);
+        
+        displayProducts(allProducts);
+    } catch (error) {
+        console.error('Error cargando productos:', error);
+        productsGrid.innerHTML = '<p class="no-products">Error al cargar los productos. Por favor, recarga la página.</p>';
+    }
+}
+
+// Mostrar loader
+function showLoader() {
+    productsGrid.innerHTML = `
+        <div class="loader">
+            <div class="loader-circle"></div>
+        </div>
+    `;
+}
+
+// Display products in the grid
+function displayProducts(productsToShow) {
+    productsGrid.innerHTML = '';
+    
+    if (productsToShow.length === 0) {
+        productsGrid.innerHTML = '<p class="no-products">No se encontraron productos.</p>';
+        return;
+    }
+    
+    productsToShow.forEach(product => {
+        const productCard = document.createElement('div');
+        productCard.className = 'product-card';
+        productCard.innerHTML = `
+            <div class="product-image">
+                <img src="${product.images[0]}" alt="${product.name}" loading="lazy">
+            </div>
+            <div class="product-info">
+                <div class="product-name">${product.name}</div>
+                <div class="product-price">${product.price ? '$' + product.price : 'Consultar'}</div>
+            </div>
+        `;
+        
+        productCard.addEventListener('click', () => {
+            openProductModal(product);
+        });
+        
+        productsGrid.appendChild(productCard);
+    });
+}
+
+// Filtrar productos por categoría
+function filterProductsByCategory(category) {
+    if (category === 'all') {
+        return allProducts;
+    }
+    
+    return allProducts.filter(product => {
+        // Verificar si el producto pertenece a la categoría seleccionada
+        return product.categories.some(cat => 
+            cat.toLowerCase() === category.toLowerCase()
+        );
+    });
+}
+
+// Abrir modal de producto
+function openProductModal(product) {
+    currentProduct = product;
+    modalProductName.textContent = product.name;
+    modalProductPrice.textContent = product.price ? '$' + product.price : 'Consultar precio';
+    
+    // Actualizar enlace de WhatsApp
+    const encodedMessage = encodeURIComponent(`Hola Paralelo, me interesa este producto: ${product.name} - ${product.price ? '$' + product.price : 'Consultar precio'}`);
+    whatsappProductBtn.href = `https://wa.me/573001904859?text=${encodedMessage}`;
+    
+    // Establecer imagen principal
+    if (product.images && product.images.length > 0) {
+        modalMainImage.src = product.images[0];
+        modalMainImage.alt = product.name;
+    }
+    
+    // Crear miniaturas
+    imageThumbnails.innerHTML = '';
+    if (product.images && product.images.length > 0) {
+        product.images.forEach((image, index) => {
+            const thumbnail = document.createElement('div');
+            thumbnail.className = 'thumbnail' + (index === 0 ? ' active' : '');
+            thumbnail.innerHTML = `<img src="${image}" alt="Thumbnail ${index + 1}">`;
+            
+            thumbnail.addEventListener('click', () => {
+                // Actualizar imagen principal
+                modalMainImage.src = image;
                 
-                productCard.addEventListener('click', () => {
-                    openProductModal(product);
+                // Actualizar miniatura activa
+                document.querySelectorAll('.thumbnail').forEach(thumb => {
+                    thumb.classList.remove('active');
                 });
-                
-                productsGrid.appendChild(productCard);
+                thumbnail.classList.add('active');
             });
-        }
-
-        // Open product modal with details
-        function openProductModal(product) {
-            currentProduct = product;
-            modalProductName.textContent = product.name;
-            modalProductPrice.textContent = product.price ? '$' + product.price : 'Consultar precio';
             
-            // Update WhatsApp link with product info
-            const encodedMessage = encodeURIComponent(`Hola Paralelo, me interesa este producto: ${product.name} - ${product.price ? '$' + product.price : 'Consultar precio'}`);
-            whatsappProductBtn.href = `https://wa.me/573001904859?text=${encodedMessage}`;
-            
-            // Set main image
-            if (product.images && product.images.length > 0) {
-                modalMainImage.src = product.images[0];
-                modalMainImage.alt = product.name;
-            }
-            
-            // Create thumbnails
-            imageThumbnails.innerHTML = '';
-            if (product.images && product.images.length > 0) {
-                product.images.forEach((image, index) => {
-                    const thumbnail = document.createElement('div');
-                    thumbnail.className = 'thumbnail' + (index === 0 ? ' active' : '');
-                    thumbnail.innerHTML = `<img src="${image}" alt="Thumbnail ${index + 1}">`;
-                    
-                    thumbnail.addEventListener('click', () => {
-                        // Update main image
-                        modalMainImage.src = image;
-                        
-                        // Update active thumbnail
-                        document.querySelectorAll('.thumbnail').forEach(thumb => {
-                            thumb.classList.remove('active');
-                        });
-                        thumbnail.classList.add('active');
-                    });
-                    
-                    imageThumbnails.appendChild(thumbnail);
-                });
-            }
-            
-            // Create size options
-            sizeOptions.innerHTML = '';
-            if (product.sizes && product.sizes !== 'Única') {
-                const sizes = product.sizes.split('-');
-                sizes.forEach(size => {
-                    const sizeOption = document.createElement('span');
-                    sizeOption.className = 'size-option';
-                    sizeOption.textContent = size.trim();
-                    sizeOption.addEventListener('click', () => {
-                        document.querySelectorAll('.size-option').forEach(option => {
-                            option.classList.remove('selected');
-                        });
-                        sizeOption.classList.add('selected');
-                    });
-                    sizeOptions.appendChild(sizeOption);
-                });
-            } else {
-                const noSizeOption = document.createElement('span');
-                noSizeOption.className = 'size-option selected';
-                noSizeOption.textContent = 'Talla Única';
-                sizeOptions.appendChild(noSizeOption);
-            }
-            
-            // Show modal with animation
-            productModal.style.display = 'block';
-            document.body.style.overflow = 'hidden';
-            setTimeout(() => {
-                productModal.classList.add('show');
-            }, 10);
-        }
-
-        // Close modal
-        function closeProductModal() {
-            productModal.classList.remove('show');
-            setTimeout(() => {
-                productModal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }, 300);
-        }
-
-        closeModal.addEventListener('click', closeProductModal);
-
-        // Close modal when clicking outside
-        window.addEventListener('click', (event) => {
-            if (event.target === productModal) {
-                closeProductModal();
-            }
+            imageThumbnails.appendChild(thumbnail);
         });
-
-        // Close modal with Escape key
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape') {
-                closeProductModal();
-            }
-        });
-
-        // Search functionality
-        function handleSearch() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const filteredProducts = allProducts.filter(product => 
-                product.name.toLowerCase().includes(searchTerm) ||
-                (product.category && product.category.toLowerCase().includes(searchTerm))
-            );
-            displayProducts(filteredProducts);
-        }
-
-        searchInput.addEventListener('input', handleSearch);
-        searchButton.addEventListener('click', handleSearch);
-
-        // Category filtering
-        categoryButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                // Update active button
-                categoryButtons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-                
-                const category = button.getAttribute('data-category');
-                if (category === 'all') {
-                    displayProducts(allProducts);
-                } else {
-                    const filteredProducts = allProducts.filter(product => 
-                        product.category && product.category === category
-                    );
-                    displayProducts(filteredProducts);
-                }
+    }
+    
+    // Crear opciones de talla
+    sizeOptions.innerHTML = '';
+    if (product.sizes && product.sizes !== 'Única') {
+        const sizes = product.sizes.split('-');
+        sizes.forEach(size => {
+            const sizeOption = document.createElement('span');
+            sizeOption.className = 'size-option';
+            sizeOption.textContent = size.trim();
+            sizeOption.addEventListener('click', () => {
+                document.querySelectorAll('.size-option').forEach(option => {
+                    option.classList.remove('selected');
+                });
+                sizeOption.classList.add('selected');
             });
+            sizeOptions.appendChild(sizeOption);
         });
+    } else {
+        const noSizeOption = document.createElement('span');
+        noSizeOption.className = 'size-option selected';
+        noSizeOption.textContent = 'Talla Única';
+        sizeOptions.appendChild(noSizeOption);
+    }
+    
+    // Mostrar modal con animación
+    productModal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => {
+        productModal.classList.add('show');
+    }, 10);
+}
 
-        // Initialize the page by loading products from Google Sheets
-        loadProducts();
+// Cerrar modal
+function closeProductModal() {
+    productModal.classList.remove('show');
+    setTimeout(() => {
+        productModal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }, 300);
+}
+
+// Asignar event listeners
+closeModal.addEventListener('click', closeProductModal);
+
+window.addEventListener('click', (event) => {
+    if (event.target === productModal) {
+        closeProductModal();
+    }
+});
+
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        closeProductModal();
+    }
+});
+
+// Funcionalidad de búsqueda
+function handleSearch() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const filteredProducts = allProducts.filter(product => 
+        product.name.toLowerCase().includes(searchTerm) ||
+        (product.categories && product.categories.some(cat => 
+            cat.toLowerCase().includes(searchTerm)
+        ))
+    );
+    displayProducts(filteredProducts);
+}
+
+searchInput.addEventListener('input', handleSearch);
+searchButton.addEventListener('click', handleSearch);
+
+// Filtrado por categoría
+categoryButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        // Actualizar botón activo
+        categoryButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        
+        const category = button.getAttribute('data-category');
+        const filteredProducts = filterProductsByCategory(category);
+        displayProducts(filteredProducts);
+    });
+});
+
+// Inicializar la página cargando productos
+loadProducts();
     </script>
 </body>
 
 </html>
+
