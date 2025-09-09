@@ -1,0 +1,38 @@
+name: Sync catalogo.json from Apps Script
+
+on:
+  workflow_dispatch: {}   # Permite correrlo manualmente desde la pestaña "Actions"
+  schedule:
+    - cron: "0 12 * * *"  # Todos los días a las 12:00 UTC (07:00 en Bogotá)
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Descargar JSON del Apps Script
+        run: |
+          mkdir -p Catalogo
+          curl -fsSL "https://script.google.com/macros/s/AKfycbyX6tkmzeBKog_WP_WnmpIdASwe_ulny2nccAXn8ZboxHiSm_AJ8_zm7D9BZ0M-9icA/exec" -o Catalogo/catalogo.json
+          # Validar que sea JSON válido (opcional)
+          jq . Catalogo/catalogo.json > /dev/null
+
+      - name: (Opcional) Generar 'nuevo.json' solo con categoría Nuevo
+        run: |
+          # Si tu JSON es un arreglo de productos y cada objeto tiene "Categoria" como string "Vestido,Nuevo"
+          # Filtra los que contengan "Nuevo" (ignora mayúsculas/minúsculas)
+          jq '[ .[] | select((.Categoria // "") | test("Nuevo"; "i")) ]' Catalogo/catalogo.json > Catalogo/nuevo.json || true
+
+      - name: Commit & Push si hubo cambios
+        run: |
+          if git diff --quiet; then
+            echo "Sin cambios"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add Catalogo/catalogo.json Catalogo/nuevo.json || true
+            git commit -m "chore: sync catalogo.json desde Apps Script [skip ci]"
+            git push
+          fi
