@@ -8,13 +8,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #000000;
-            --secondary: #FFFFFF;
-            --accent: #FF3B8D;
-            --accent-dark: #e02a75;
-            --light-bg: #F8F8F8;
-            --text: #333333;
-            --light-text: #777777;
+            --primary: #000000;          /* Negro */
+            --secondary: #FFFFFF;        /* Blanco */
+            --accent: #333333;           /* Gris oscuro - reemplaza rosado */
+            --accent-dark: #222222;      /* Gris más oscuro */
+            --light-bg: #F8F8F8;         /* Fondo claro */
+            --text: #333333;             /* Texto gris oscuro */
+            --light-text: #777777;       /* Texto gris claro */
+            --border-color: #DDDDDD;     /* Borde gris */
             --font-main: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
         }
         
@@ -77,7 +78,7 @@
         .search-bar input {
             width: 100%;
             padding: 12px 20px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             border-radius: 30px;
             font-size: 14px;
             font-family: var(--font-main);
@@ -87,7 +88,7 @@
         .search-bar input:focus {
             outline: none;
             border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(255, 59, 141, 0.2);
+            box-shadow: 0 0 0 2px rgba(51, 51, 51, 0.2);
         }
         
         .search-bar button {
@@ -120,13 +121,14 @@
             padding: 8px 20px;
             margin: 0 5px;
             background: var(--secondary);
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             border-radius: 20px;
             white-space: nowrap;
             cursor: pointer;
             transition: all 0.3s;
             font-family: var(--font-main);
             font-weight: 500;
+            color: var(--text);
         }
         
         .category-btn.active, .category-btn:hover {
@@ -137,7 +139,7 @@
         
         /* Hero Section */
         .hero {
-            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://paralelotrendy.com/wp-content/uploads/2023/11/PARALELO-BERMUDA-EUPHORIA-BLANCA-FOTO-FRONTAL-COMPLETA-1-rotated.jpg') center/cover;
+            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://paralelotrendy.com/wp-content/uploads/2023/11/PARALELO-BERMUDA-EUPHORIA-BLANCA-FOTO-FRONTAL-COMPLETA-1-rotated.jpg') center/cover;
             color: var(--secondary);
             text-align: center;
             padding: 100px 20px;
@@ -153,11 +155,13 @@
             font-size: 3rem;
             margin-bottom: 15px;
             font-weight: 700;
+            color: var(--secondary);
         }
         
         .hero p {
             font-size: 1.3rem;
             margin-bottom: 30px;
+            color: #CCCCCC;
         }
         
         /* Products Grid */
@@ -173,6 +177,7 @@
             text-align: center;
             position: relative;
             padding-bottom: 15px;
+            color: var(--text);
         }
         
         .section-title:after {
@@ -199,6 +204,7 @@
             transition: transform 0.3s, box-shadow 0.3s;
             cursor: pointer;
             position: relative;
+            border: 1px solid var(--border-color);
         }
         
         .product-card:hover {
@@ -232,6 +238,7 @@
             font-weight: 600;
             margin-bottom: 8px;
             font-size: 16px;
+            color: var(--text);
         }
         
         .product-price {
@@ -359,6 +366,7 @@
             font-size: 26px;
             margin-bottom: 10px;
             font-weight: 700;
+            color: var(--text);
         }
         
         .modal-product-price {
@@ -375,6 +383,7 @@
         .size-selector h3 {
             margin-bottom: 12px;
             font-size: 18px;
+            color: var(--text);
         }
         
         .size-options {
@@ -386,11 +395,12 @@
         
         .size-option {
             padding: 10px 16px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s;
             font-weight: 500;
+            color: var(--text);
         }
         
         .size-option.selected, .size-option:hover {
@@ -446,7 +456,7 @@
         }
         
         .btn-secondary:hover {
-            background: #fff0f5;
+            background: #F5F5F5;
             transform: translateY(-2px);
         }
         
@@ -477,6 +487,7 @@
             font-size: 20px;
             position: relative;
             padding-bottom: 10px;
+            color: var(--secondary);
         }
         
         .footer-section h3:after {
@@ -498,13 +509,13 @@
         }
         
         .footer-links a {
-            color: #ddd;
+            color: #CCCCCC;
             text-decoration: none;
             transition: color 0.3s;
         }
         
         .footer-links a:hover {
-            color: var(--accent);
+            color: #FFFFFF;
         }
         
         .social-links {
@@ -561,7 +572,7 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* WhatsApp Float Button */
+        /* WhatsApp Float Button - Mantenemos el verde como excepción para funcionalidad */
         .whatsapp-float {
             position: fixed;
             bottom: 25px;
@@ -772,7 +783,7 @@
     </footer>
 
     <script>
-        // URL de tu Google Apps Script (actualizada)
+        // URL de tu Google Apps Script
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyX6tkmzeBKog_WP_WnmpIdASwe_ulny2nccAXn8ZboxHiSm_AJ8_zm7D9BZ0M-9icA/exec';
 
         // Datos de ejemplo para pruebas
@@ -782,9 +793,9 @@
                 price: "129,000",
                 sizes: "S-M-L",
                 images: [
-                    "https://via.placeholder.com/500x600/FFB6C1/000000?text=Vestido+Floral",
-                    "https://via.placeholder.com/500x600/FFB6C1/000000?text=Vestido+Trasero",
-                    "https://via.placeholder.com/500x600/FFB6C1/000000?text=Vestido+Detalle"
+                    "https://via.placeholder.com/500x600/333333/FFFFFF?text=Vestido+Floral",
+                    "https://via.placeholder.com/500x600/333333/FFFFFF?text=Vestido+Trasero",
+                    "https://via.placeholder.com/500x600/333333/FFFFFF?text=Vestido+Detalle"
                 ],
                 categories: ["Vestido", "Nuevo"]
             },
@@ -803,8 +814,8 @@
                 price: "159,000",
                 sizes: "28-30-32-34",
                 images: [
-                    "https://via.placeholder.com/500x600/D2B48C/000000?text=Pantalón+Cargo",
-                    "https://via.placeholder.com/500x600/D2B48C/000000?text=Pantalón+Detalle"
+                    "https://via.placeholder.com/500x600/D2B48C/333333?text=Pantalón+Cargo",
+                    "https://via.placeholder.com/500x600/D2B48C/333333?text=Pantalón+Detalle"
                 ],
                 categories: ["Pantalon"]
             }
